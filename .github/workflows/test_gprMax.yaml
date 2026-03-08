@@ -15,19 +15,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Build Dependencies
+      - name: Install Compiler and Build Tools
         run: |
           python -m pip install --upgrade pip
-          # We install these separately first so setup.py can see them
-          pip install "numpy==1.26.4" "Cython==3.0.11"
+          # We need these three to handle the 'setup.py' and Cython compilation
+          pip install setuptools wheel Cython==3.0.11
+          # We install NumPy specifically so setup.py can see it during the build
+          pip install "numpy==1.26.4"
 
-      - name: Install gprMax and remaining requirements
+      - name: Install gprMax (No Build Isolation)
         run: |
-          # Now that numpy exists, this won't crash
-          pip install -e .
-          # Install the other test-specific tools
+          # --no-build-isolation is the KEY. 
+          # It tells pip: "Use the NumPy I just installed, don't look for a new one."
+          pip install --no-build-isolation -e .
+
+      - name: Install Test Dependencies
+        run: |
           pip install h5py==3.12.1 pytest colorama
 
       - name: Run Environment Validation
         run: |
+          # Running as a module ensures the current directory is in the path
           python -m pytest tests/test_env.py
