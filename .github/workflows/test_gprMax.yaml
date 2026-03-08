@@ -1,0 +1,28 @@
+name: gprMax CI
+
+on: [push, pull_request]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest  # We'll start with Linux as it's the fastest for CI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' 
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy==1.26.4 h5py==3.12.1 Cython pytest colorama
+          # This installs gprMax in 'editable' mode and triggers the build
+          pip install -e .
+
+      - name: Run Environment Validation
+        run: |
+          # We use -m pytest to ensure the current directory is in the path
+          python -m pytest tests/test_env.py
